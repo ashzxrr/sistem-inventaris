@@ -213,11 +213,11 @@
                 @method('PUT')
 
                 <div class="form-group">
-                    <label for="kode_barang">Kode Barang <span style="color: #d4847f;">*</span></label>
-                    <input type="text" id="kode_barang" name="kode_barang" value="{{ $barang->kode_barang }}" required>
-                    @error('kode_barang')
-                        <small style="color: #e74c3c;">{{ $message }}</small>
-                    @enderror
+                    <label for="kode_barang">Kode Barang <span style="color: #8b7a76;"> (Tidak dapat diubah)</span></label>
+                    <div style="background: #f5f3f1; padding: 0.75rem; border-radius: 6px; border: 1px solid #e0d5d0; color: #d4847f; font-weight: 600; font-size: 1rem;">
+                        {{ $barang->kode_barang }}
+                    </div>
+                    <small style="color: #8b7a76; margin-top: 0.3rem; display: block;">Kode barang tidak dapat diubah setelah dibuat</small>
                 </div>
 
                 <div class="form-group">

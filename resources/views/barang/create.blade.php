@@ -196,11 +196,11 @@
                 @csrf
 
                 <div class="form-group">
-                    <label for="kode_barang">Kode Barang <span style="color: #d4847f;">*</span></label>
-                    <input type="text" id="kode_barang" name="kode_barang" placeholder="Contoh: BRG001" required>
-                    @error('kode_barang')
-                        <small style="color: #e74c3c;">{{ $message }}</small>
-                    @enderror
+                    <label for="kode_barang">Kode Barang <span style="color: #d4847f;">✓ Otomatis</span></label>
+                    <div style="background: #f5f3f1; padding: 0.75rem; border-radius: 6px; border: 1px solid #e0d5d0; color: #d4847f; font-weight: 600; font-size: 1.1rem;">
+                        {{ $nextKodeBarang }}
+                    </div>
+                    <small style="color: #8b7a76; margin-top: 0.3rem; display: block;">Kode akan dibuat otomatis berdasarkan nomor urut</small>
                 </div>
 
                 <div class="form-group">
