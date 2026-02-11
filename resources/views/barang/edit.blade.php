@@ -113,6 +113,7 @@
         }
 
         input[type="text"],
+        select,
         textarea {
             width: 100%;
             padding: 0.75rem;
@@ -125,6 +126,7 @@
         }
 
         input[type="text"]:focus,
+        select:focus,
         textarea:focus {
             outline: none;
             border-color: #d4847f;
@@ -230,7 +232,12 @@
 
                 <div class="form-group">
                     <label for="kategori">Kategori <span style="color: #d4847f;">*</span></label>
-                    <input type="text" id="kategori" name="kategori" value="{{ $barang->kategori }}" required>
+                    <select id="kategori" name="kategori" required>
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="Modem" {{ $barang->kategori == 'Modem' ? 'selected' : '' }}>Modem</option>
+                        <option value="Kabel" {{ $barang->kategori == 'Kabel' ? 'selected' : '' }}>Kabel</option>
+                        <option value="Barang lain" {{ $barang->kategori == 'Barang lain' ? 'selected' : '' }}>Barang lain</option>
+                    </select>
                     @error('kategori')
                         <small style="color: #e74c3c;">{{ $message }}</small>
                     @enderror
@@ -238,7 +245,11 @@
 
                 <div class="form-group">
                     <label for="satuan">Satuan <span style="color: #d4847f;">*</span></label>
-                    <input type="text" id="satuan" name="satuan" value="{{ $barang->satuan }}" required>
+                    <select id="satuan" name="satuan" required>
+                        <option value="">-- Pilih Satuan --</option>
+                        <option value="Pcs" {{ $barang->satuan == 'Pcs' ? 'selected' : '' }}>Pcs</option>
+                        <option value="Meter" {{ $barang->satuan == 'Meter' ? 'selected' : '' }}>Meter</option>
+                    </select>
                     @error('satuan')
                         <small style="color: #e74c3c;">{{ $message }}</small>
                     @enderror

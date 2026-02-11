@@ -210,6 +210,163 @@
             margin-bottom: 1rem;
         }
 
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            color: #5a4844;
+            font-size: 1.5rem;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-body label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #5a4844;
+        }
+
+        .modal-body select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e8b5ae;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #5a4844;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .modal-body select:focus {
+            outline: none;
+            border-color: #d4847f;
+            box-shadow: 0 0 0 3px rgba(212, 132, 127, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #f0e8e5;
+            color: #5a4844;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #e8dcda;
+        }
+
+        .close-modal {
+            color: #8b7a76;
+            float: right;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #5a4844;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-color: #2e7d32;
+        }
+
+        .alert-error {
+            background: #ffe8e8;
+            color: #d96f63;
+            border-color: #d96f63;
+        }
+
+        .alert-close {
+            float: right;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: inherit;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
         @media (max-width: 768px) {
             .page-title {
                 font-size: 1.8rem;
@@ -231,6 +388,11 @@
             .actions {
                 flex-wrap: wrap;
             }
+
+            .modal-content {
+                width: 95%;
+                margin: 30% auto;
+            }
         }
     </style>
 </head>
@@ -250,11 +412,25 @@
             <p class="page-subtitle">Kelola data barang inventaris Anda dengan mudah</p>
         </div>
 
+        @if(session('success'))
+            <div class="alert alert-success" id="successAlert">
+                <span class="alert-close" onclick="document.getElementById('successAlert').style.display='none';">&times;</span>
+                <strong>✓ Sukses!</strong> {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-error" id="errorAlert">
+                <span class="alert-close" onclick="document.getElementById('errorAlert').style.display='none';">&times;</span>
+                <strong>⚠ Error!</strong> {{ session('error') }}
+            </div>
+        @endif
+
         <div class="actions-bar">
             <div>
                 <strong style="color: #5a4844;">Total Barang: {{ count($barangs) }}</strong>
             </div>
-            <a href="/barang/create" class="btn">+ Tambah Barang Baru</a>
+            <button class="btn" onclick="openModal()">+ Tambah Barang</button>
         </div>
 
         @if(count($barangs) > 0)
@@ -308,5 +484,72 @@
             </div>
         @endif
     </div>
+
+    <!-- Modal untuk pilih jumlah barang -->
+    <div id="quantityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+                <h2>Tambah Barang Baru</h2>
+            </div>
+            <div class="modal-body">
+                <label for="quantitySelect">Berapa barang yang ingin ditambahkan?</label>
+                <select id="quantitySelect">
+                    <option value="">-- Pilih Jumlah --</option>
+                    <option value="1">1 Barang</option>
+                    <option value="2">2 Barang</option>
+                    <option value="3">3 Barang</option>
+                    <option value="4">4 Barang</option>
+                    <option value="5">5 Barang</option>
+                    <option value="6">6 Barang</option>
+                    <option value="7">7 Barang</option>
+                    <option value="8">8 Barang</option>
+                    <option value="9">9 Barang</option>
+                    <option value="10">10 Barang</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Batal</button>
+                <button class="btn" onclick="startCreate()">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('quantityModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('quantityModal').style.display = 'none';
+            document.getElementById('quantitySelect').value = '';
+        }
+
+        function startCreate() {
+            const quantity = document.getElementById('quantitySelect').value;
+            if (quantity) {
+                window.location.href = `/barang/create?count=${quantity}`;
+            } else {
+                alert('Silakan pilih jumlah barang terlebih dahulu!');
+            }
+        }
+
+        // Close modal ketika klik di luar modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('quantityModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Allow Enter key to submit
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('quantitySelect').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    startCreate();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
