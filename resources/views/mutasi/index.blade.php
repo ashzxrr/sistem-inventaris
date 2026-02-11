@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Mutasi</title>
     <style>
@@ -162,6 +163,124 @@
         .badge-keluar {
             background: linear-gradient(135deg, #e8837e 0%, #d96f63 100%);
             color: white;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.6rem 0.8rem;
+            border: 2px solid #e8b5ae;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #5a4844;
+            min-width: 260px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #d4847f;
+            box-shadow: 0 0 0 3px rgba(212, 132, 127, 0.07);
+        }
+
+        /* Minimal pagination styling (compact & clean) */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: transparent;
+        }
+
+        .pagination-info {
+            color: #6b5b56;
+            font-size: 0.9rem;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.25rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+        }
+
+        .pagination li { display: inline-block; }
+
+        .pagination li a, .pagination li span {
+            display: inline-block;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            background: #fff;
+            color: #5a4844;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .pagination li a:hover {
+            background: #f5f5f5;
+            color: #5a4844;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .pagination li.active span {
+            background: #d4847f;
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .pagination li.disabled span {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            .pagination-wrapper { flex-direction: column; gap: 0.5rem; }
+            .pagination { flex-wrap: wrap; justify-content: center; }
+            .pagination-info { font-size: 0.85rem; }
+        }
+
+        /* Simple pagination controls (override any external icons/pseudo elements) */
+        .simple-pagination {
+            display: inline-flex;
+            gap: 0.45rem;
+            align-items: center;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .simple-pagination a,
+        .simple-pagination span {
+            display: inline-block;
+            padding: 0.35rem 0.55rem;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            background: #fff;
+            color: #5a4844;
+            text-decoration: none;
+            min-width: 34px;
+            text-align: center;
+        }
+
+        .simple-pagination a:hover { background:#f5f5f5; }
+        .simple-pagination span.active { background:#d4847f; color:#fff; border-color:transparent; }
+        .simple-pagination span.disabled { opacity:0.45; pointer-events:none; }
+
+        /* Ensure any pseudo icons from other CSS are removed inside our simple pagination */
+        .simple-pagination a::before, .simple-pagination a::after,
+        .simple-pagination span::before, .simple-pagination span::after {
+            content: none !important;
+            background: none !important;
+            width: auto !important;
+            height: auto !important;
+            display: inline !important;
         }
 
         .text-muted {
@@ -434,13 +553,21 @@
         @endif
 
         <div class="actions-bar">
-            <div>
-                <strong style="color: #5a4844;">Total Mutasi: {{ count($mutasis) }}</strong>
+            <div style="display:flex; gap:1rem; align-items:center;">
+                <strong id="totalCount" style="color: #5a4844;">Total Mutasi: {{ $mutasis->total() }}</strong>
+
+                <form id="searchForm" method="GET" action="/mutasi" class="search-form" style="margin:0;">
+                    <input id="searchInput" type="text" name="q" placeholder="Cari kode, nama, penanggung, keterangan..." value="{{ $q ?? '' }}" class="search-input" autocomplete="off" />
+                    @if(!empty($q))
+                        <a href="/mutasi" class="btn" style="background:#f0e8e5; color:#5a4844; padding:0.55rem 0.9rem; font-size:0.9rem;">Reset</a>
+                    @endif
+                </form>
             </div>
+
             <button class="btn" onclick="openModal()">+ Tambah Mutasi</button>
         </div>
 
-        @if(count($mutasis) > 0)
+        @if($mutasis->total() > 0)
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -456,10 +583,10 @@
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="mutasiTbody">
                         @foreach ($mutasis as $index => $mutasi)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $mutasis->firstItem() + $index }}</td>
                             <td><strong>{{ $mutasi->barang->kode_barang }}</strong></td>
                             <td>{{ $mutasi->barang->nama_barang }}</td>
                             <td>
@@ -487,6 +614,34 @@
                         @endforeach
                     </tbody>
                 </table>
+                <div id="paginationNav" style="padding:0 1rem 1rem 1rem;">
+                    <div class="pagination-wrapper">
+                        <div class="pagination-info">Showing {{ $mutasis->firstItem() }} to {{ $mutasis->lastItem() }} of {{ $mutasis->total() }} results</div>
+                        <div>
+                            <nav class="simple-pagination" aria-label="Pagination">
+                                @if($mutasis->onFirstPage())
+                                    <span class="disabled">« Prev</span>
+                                @else
+                                    <a href="{{ $mutasis->previousPageUrl() }}">« Prev</a>
+                                @endif
+
+                                @for($i = 1; $i <= $mutasis->lastPage(); $i++)
+                                    @if($i == $mutasis->currentPage())
+                                        <span class="active">{{ $i }}</span>
+                                    @else
+                                        <a href="{{ $mutasis->url($i) }}">{{ $i }}</a>
+                                    @endif
+                                @endfor
+
+                                @if($mutasis->hasMorePages())
+                                    <a href="{{ $mutasis->nextPageUrl() }}">Next »</a>
+                                @else
+                                    <span class="disabled">Next »</span>
+                                @endif
+                            </nav>
+                        </div>
+                    </div>
+                </div>
             </div>
         @else
             <div class="table-wrapper">
@@ -563,6 +718,117 @@
                 }
             });
         });
+
+        // Live search (debounced) — replace table body with AJAX results and hide pagination
+        (function() {
+            const input = document.getElementById('searchInput');
+            const form = document.getElementById('searchForm');
+            const tbody = document.getElementById('mutasiTbody');
+            const total = document.getElementById('totalCount');
+            const paginationNav = document.getElementById('paginationNav');
+            const initialTbody = tbody ? tbody.innerHTML : '';
+            const initialTotal = total ? total.textContent : '';
+            const initialPagination = paginationNav ? paginationNav.innerHTML : '';
+            let timer = null;
+
+            function truncate(text, n=30) {
+                if (!text) return '';
+                return text.length > n ? text.substr(0, n-1) + '…' : text;
+            }
+
+            function renderResults(items) {
+                if (!tbody) return;
+                if (!items || items.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align:center; padding:2rem; color:#8b7a76;">📭 Tidak ada hasil pencarian</td>
+                        </tr>
+                    `;
+                    total.textContent = 'Total Mutasi: 0';
+                    if (paginationNav) paginationNav.style.display = 'none';
+                    return;
+                }
+
+                let html = '';
+                items.forEach((m, idx) => {
+                    const badge = m.jenis === 'MASUK' ?
+                        '<span class="badge badge-masuk">✓ MASUK</span>' :
+                        '<span class="badge badge-keluar">✗ KELUAR</span>';
+
+                    html += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td><strong>${m.kode_barang || ''}</strong></td>
+                            <td>${m.nama_barang || ''}</td>
+                            <td>${badge}</td>
+                            <td><strong style="color: #d4847f;">${m.jumlah} ${m.satuan || ''}</strong></td>
+                            <td>${m.penanggung_jawab || ''}</td>
+                            <td>${m.tanggal || ''}</td>
+                            <td><span class="text-muted">${truncate(m.keterangan)}</span></td>
+                            <td>
+                                <div class="actions">
+                                    <a href="/mutasi/${m.id}/edit" class="btn-edit">Edit</a>
+                                    <form action="/mutasi/${m.id}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus mutasi ini?');">
+                                        <input type="hidden" name="_token" value="${document.querySelector('meta[name=csrf-token]').getAttribute('content')}">
+                                        <input type="hidden" name="_method" value="DELETE">
+                                        <button type="submit" class="btn-delete">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+                total.textContent = `Total Mutasi: ${items.length}`;
+                if (paginationNav) paginationNav.style.display = 'none';
+            }
+
+            async function doSearch(q) {
+                try {
+                    const res = await fetch(`/mutasi/search?q=${encodeURIComponent(q)}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!res.ok) return;
+                    const json = await res.json();
+                    renderResults(json.data || []);
+                } catch (e) {
+                    console.error('search error', e);
+                }
+            }
+
+            if (form && input) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const q = input.value.trim();
+                    if (!q) {
+                        // restore initial paginated view
+                        tbody.innerHTML = initialTbody;
+                        total.textContent = initialTotal;
+                        if (paginationNav) {
+                            paginationNav.innerHTML = initialPagination;
+                            paginationNav.style.display = '';
+                        }
+                        return;
+                    }
+                    doSearch(q);
+                });
+
+                input.addEventListener('input', function(e) {
+                    const q = e.target.value.trim();
+                    clearTimeout(timer);
+                    if (!q) {
+                        // restore initial paginated view immediately
+                        tbody.innerHTML = initialTbody;
+                        total.textContent = initialTotal;
+                        if (paginationNav) {
+                            paginationNav.innerHTML = initialPagination;
+                            paginationNav.style.display = '';
+                        }
+                        return;
+                    }
+                    timer = setTimeout(() => doSearch(q), 300);
+                });
+            }
+        })();
     </script>
 </body>
 </html>

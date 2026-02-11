@@ -1,1 +1,287 @@
-<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Edit Mutasi</title>\n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n\n        body {\n            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n            background: linear-gradient(135deg, #f5d7d3 0%, #f0c9c5 50%, #e8b5ae 100%);\n            min-height: 100vh;\n        }\n\n        /* Navigation */\n        nav {\n            background: rgba(255, 255, 255, 0.95);\n            backdrop-filter: blur(10px);\n            padding: 1rem 2rem;\n            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);\n            display: flex;\n            justify-content: space-between;\n            align-items: center;\n            margin-bottom: 2rem;\n        }\n\n        .nav-brand {\n            font-size: 1.5rem;\n            font-weight: 700;\n            background: linear-gradient(135deg, #d4847f 0%, #c97169 100%);\n            -webkit-background-clip: text;\n            -webkit-text-fill-color: transparent;\n            background-clip: text;\n        }\n\n        .nav-links {\n            display: flex;\n            gap: 1.5rem;\n            align-items: center;\n        }\n\n        .nav-links a {\n            text-decoration: none;\n            color: #6b5b56;\n            font-weight: 500;\n            transition: all 0.3s ease;\n            padding: 0.5rem 1rem;\n            border-radius: 6px;\n        }\n\n        .nav-links a:hover {\n            background: linear-gradient(135deg, #f5d7d3 0%, #e8b5ae 100%);\n            color: #d4847f;\n        }\n\n        /* Container */\n        .container {\n            max-width: 600px;\n            margin: 0 auto;\n            padding: 0 2rem 2rem;\n        }\n\n        .page-header {\n            margin-bottom: 2rem;\n        }\n\n        .page-title {\n            font-size: 2rem;\n            font-weight: 800;\n            color: #5a4844;\n            margin-bottom: 0.5rem;\n        }\n\n        .page-subtitle {\n            color: #8b7a76;\n            font-size: 0.95rem;\n        }\n\n        .mutasi-info {\n            background: rgba(255, 255, 255, 0.7);\n            padding: 1rem;\n            border-radius: 8px;\n            margin-bottom: 1rem;\n            border-left: 4px solid #d4847f;\n        }\n\n        .mutasi-info strong {\n            color: #5a4844;\n        }\n\n        /* Form */\n        .form-card {\n            background: white;\n            border-radius: 12px;\n            padding: 2rem;\n            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);\n        }\n\n        .form-group {\n            margin-bottom: 1.5rem;\n        }\n\n        label {\n            display: block;\n            margin-bottom: 0.5rem;\n            font-weight: 600;\n            color: #5a4844;\n        }\n\n        input[type=\"text\"],\n        input[type=\"number\"],\n        input[type=\"date\"],\n        select,\n        textarea {\n            width: 100%;\n            padding: 0.75rem;\n            border: 1px solid #e0d5d0;\n            border-radius: 6px;\n            font-family: inherit;\n            font-size: 0.95rem;\n            transition: all 0.3s ease;\n            color: #5a4844;\n        }\n\n        input[type=\"text\"]:focus,\n        input[type=\"number\"]:focus,\n        input[type=\"date\"]:focus,\n        select:focus,\n        textarea:focus {\n            outline: none;\n            border-color: #d4847f;\n            box-shadow: 0 0 0 3px rgba(212, 132, 127, 0.1);\n        }\n\n        textarea {\n            resize: vertical;\n            min-height: 80px;\n        }\n\n        .form-buttons {\n            display: flex;\n            gap: 1rem;\n            margin-top: 2rem;\n        }\n\n        .btn {\n            flex: 1;\n            padding: 0.75rem 1.5rem;\n            border: none;\n            border-radius: 6px;\n            font-weight: 600;\n            cursor: pointer;\n            transition: all 0.3s ease;\n            font-size: 0.95rem;\n        }\n\n        .btn-primary {\n            background: linear-gradient(135deg, #81b4d8 0%, #6a9bc8 100%);\n            color: white;\n        }\n\n        .btn-primary:hover {\n            transform: scale(1.02);\n            box-shadow: 0 8px 20px rgba(106, 155, 200, 0.3);\n        }\n\n        .btn-secondary {\n            background: #e8d5cc;\n            color: #5a4844;\n        }\n\n        .btn-secondary:hover {\n            background: #dfc5b8;\n        }\n\n        @media (max-width: 768px) {\n            .page-title {\n                font-size: 1.5rem;\n            }\n\n            .form-card {\n                padding: 1.5rem;\n            }\n\n            .form-buttons {\n                flex-direction: column;\n            }\n        }\n    </style>\n</head>\n<body>\n    <nav>\n        <div class=\"nav-brand\">📦 Sistem Inventaris</div>\n        <div class=\"nav-links\">\n            <a href=\"/\">Home</a>\n            <a href=\"/barang\">Barang</a>\n            <a href=\"/mutasi\">Mutasi</a>\n        </div>\n    </nav>\n\n    <div class=\"container\">\n        <div class=\"page-header\">\n            <h1 class=\"page-title\">✏️ Edit Mutasi</h1>\n            <p class=\"page-subtitle\">Perbarui informasi mutasi barang</p>\n        </div>\n\n        <div class=\"mutasi-info\">\n            <strong>ID Mutasi:</strong> #{{ $mutasi->id }} | <strong>Barang:</strong> {{ $mutasi->barang->nama_barang }}\n        </div>\n\n        <div class=\"form-card\">\n            <form action=\"/mutasi/{{ $mutasi->id }}\" method=\"POST\">\n                @csrf\n                @method('PUT')\n\n                <div class=\"form-group\">\n                    <label for=\"barang_id\">Pilih Barang <span style=\"color: #d4847f;\">*</span></label>\n                    <select id=\"barang_id\" name=\"barang_id\" required>\n                        @foreach ($barangs as $barang)\n                            <option value=\"{{ $barang->id }}\" @selected($mutasi->barang_id == $barang->id)>\n                                {{ $barang->kode_barang }} - {{ $barang->nama_barang }}\n                            </option>\n                        @endforeach\n                    </select>\n                    @error('barang_id')\n                        <small style=\"color: #e74c3c;\">{{ $message }}</small>\n                    @enderror\n                </div>\n\n                <div class=\"form-group\">\n                    <label for=\"jenis\">Jenis Mutasi <span style=\"color: #d4847f;\">*</span></label>\n                    <select id=\"jenis\" name=\"jenis\" required>\n                        <option value=\"MASUK\" @selected($mutasi->jenis == 'MASUK')>✓ MASUK (Barang Masuk)</option>\n                        <option value=\"KELUAR\" @selected($mutasi->jenis == 'KELUAR')>✕ KELUAR (Barang Keluar)</option>\n                    </select>\n                    @error('jenis')\n                        <small style=\"color: #e74c3c;\">{{ $message }}</small>\n                    @enderror\n                </div>\n\n                <div class=\"form-group\">\n                    <label for=\"jumlah\">Jumlah <span style=\"color: #d4847f;\">*</span></label>\n                    <input type=\"number\" id=\"jumlah\" name=\"jumlah\" value=\"{{ $mutasi->jumlah }}\" min=\"1\" required>\n                    @error('jumlah')\n                        <small style=\"color: #e74c3c;\">{{ $message }}</small>\n                    @enderror\n                </div>\n\n                <div class=\"form-group\">\n                    <label for=\"penanggung_jawab\">Penanggung Jawab <span style=\"color: #d4847f;\">*</span></label>\n                    <input type=\"text\" id=\"penanggung_jawab\" name=\"penanggung_jawab\" value=\"{{ $mutasi->penanggung_jawab }}\" required>\n                    @error('penanggung_jawab')\n                        <small style=\"color: #e74c3c;\">{{ $message }}</small>\n                    @enderror\n                </div>\n\n                <div class=\"form-group\">\n                    <label for=\"tanggal\">Tanggal <span style=\"color: #d4847f;\">*</span></label>\n                    <input type=\"date\" id=\"tanggal\" name=\"tanggal\" value=\"{{ $mutasi->tanggal }}\" required>\n                    @error('tanggal')\n                        <small style=\"color: #e74c3c;\">{{ $message }}</small>\n                    @enderror\n                </div>\n\n                <div class=\"form-group\">\n                    <label for=\"keterangan\">Keterangan</label>\n                    <textarea id=\"keterangan\" name=\"keterangan\">{{ $mutasi->keterangan }}</textarea>\n                    @error('keterangan')\n                        <small style=\"color: #e74c3c;\">{{ $message }}</small>\n                    @enderror\n                </div>\n\n                <div class=\"form-buttons\">\n                    <a href=\"/mutasi\" class=\"btn btn-secondary\">Batal</a>\n                    <button type=\"submit\" class=\"btn btn-primary\">Update Mutasi</button>\n                </div>\n            </form>\n        </div>\n    </div>\n</body>\n</html>
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Mutasi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5d7d3 0%, #f0c9c5 50%, #e8b5ae 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #d4847f 0%, #c97169 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #6b5b56;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #f5d7d3 0%, #e8b5ae 100%);
+            color: #d4847f;
+        }
+
+        /* Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 2rem 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #5a4844;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #8b7a76;
+            font-size: 0.95rem;
+        }
+
+        .mutasi-info {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #d4847f;
+        }
+
+        .mutasi-info strong {
+            color: #5a4844;
+        }
+
+        /* Form */
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #5a4844;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e0d5d0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            color: #5a4844;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #d4847f;
+            box-shadow: 0 0 0 3px rgba(212, 132, 127, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #81b4d8 0%, #6a9bc8 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(106, 155, 200, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e8d5cc;
+            color: #5a4844;
+        }
+
+        .btn-secondary:hover {
+            background: #dfc5b8;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .form-card {
+                padding: 1.5rem;
+            }
+
+            .form-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">ðŸ“¦ Sistem Inventaris</div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/barang">Barang</a>
+            <a href="/mutasi">Mutasi</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">âœï¸ Edit Mutasi</h1>
+            <p class="page-subtitle">Perbarui informasi mutasi barang</p>
+        </div>
+
+        <div class="mutasi-info">
+            <strong>ID Mutasi:</strong> #{{ $mutasi->id }} | <strong>Barang:</strong> {{ $mutasi->barang->nama_barang }}
+        </div>
+
+        <div class="form-card">
+            <form action="/mutasi/{{ $mutasi->id }}" method="POST">
+                @csrf
+                @method('PUT')
+
+                <div class="form-group">
+                    <label for="barang_id">Pilih Barang <span style="color: #d4847f;">*</span></label>
+                    <select id="barang_id" name="barang_id" required>
+                        @foreach ($barangs as $barang)
+                            <option value="{{ $barang->id }}" @selected($mutasi->barang_id == $barang->id)>
+                                {{ $barang->kode_barang }} - {{ $barang->nama_barang }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('barang_id')
+                        <small style="color: #e74c3c;">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="jenis">Jenis Mutasi <span style="color: #d4847f;">*</span></label>
+                    <select id="jenis" name="jenis" required>
+                        <option value="MASUK" @selected($mutasi->jenis == 'MASUK')>âœ“ MASUK (Barang Masuk)</option>
+                        <option value="KELUAR" @selected($mutasi->jenis == 'KELUAR')>âœ• KELUAR (Barang Keluar)</option>
+                    </select>
+                    @error('jenis')
+                        <small style="color: #e74c3c;">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="jumlah">Jumlah <span style="color: #d4847f;">*</span></label>
+                    <input type="number" id="jumlah" name="jumlah" value="{{ $mutasi->jumlah }}" min="1" required>
+                    @error('jumlah')
+                        <small style="color: #e74c3c;">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="penanggung_jawab">Penanggung Jawab <span style="color: #d4847f;">*</span></label>
+                    <input type="text" id="penanggung_jawab" name="penanggung_jawab" value="{{ $mutasi->penanggung_jawab }}" required>
+                    @error('penanggung_jawab')
+                        <small style="color: #e74c3c;">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="tanggal">Tanggal <span style="color: #d4847f;">*</span></label>
+                    <input type="date" id="tanggal" name="tanggal" value="{{ $mutasi->tanggal }}" required>
+                    @error('tanggal')
+                        <small style="color: #e74c3c;">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="keterangan">Keterangan</label>
+                    <textarea id="keterangan" name="keterangan">{{ $mutasi->keterangan }}</textarea>
+                    @error('keterangan')
+                        <small style="color: #e74c3c;">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="form-buttons">
+                    <a href="/mutasi" class="btn btn-secondary">Batal</a>
+                    <button type="submit" class="btn btn-primary">Update Mutasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+

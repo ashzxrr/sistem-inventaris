@@ -8,10 +8,27 @@ use Illuminate\Http\Request;
 
 class MutasiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $mutasis = Mutasi::with('barang')->get();
-        return view('mutasi.index', compact('mutasis'));
+        $q = $request->query('q');
+
+        $query = Mutasi::with('barang')->orderBy('tanggal', 'desc');
+
+        if ($q) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('penanggung_jawab', 'like', "%{$q}%")
+                    ->orWhere('keterangan', 'like', "%{$q}%")
+                    ->orWhere('jenis', 'like', "%{$q}%")
+                    ->orWhereHas('barang', function($qb) use ($q) {
+                        $qb->where('kode_barang', 'like', "%{$q}%")
+                           ->orWhere('nama_barang', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        // paginate results (10 per page)
+        $mutasis = $query->paginate(10);
+        return view('mutasi.index', compact('mutasis', 'q'));
     }
 
     public function create(Request $request)
@@ -121,5 +138,43 @@ class MutasiController extends Controller
     {
         Mutasi::destroy($id);
         return redirect('/mutasi')->with('success', 'Mutasi berhasil dihapus');
+    }
+
+    /**
+     * AJAX search endpoint returning JSON results for live search.
+     */
+    public function search(Request $request)
+    {
+        $q = $request->query('q');
+
+        $query = Mutasi::with('barang')->orderBy('tanggal', 'desc');
+
+        if ($q) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('penanggung_jawab', 'like', "%{$q}%")
+                    ->orWhere('keterangan', 'like', "%{$q}%")
+                    ->orWhere('jenis', 'like', "%{$q}%")
+                    ->orWhereHas('barang', function($qb) use ($q) {
+                        $qb->where('kode_barang', 'like', "%{$q}%")
+                           ->orWhere('nama_barang', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        $results = $query->get()->map(function($m) {
+            return [
+                'id' => $m->id,
+                'kode_barang' => $m->barang->kode_barang ?? null,
+                'nama_barang' => $m->barang->nama_barang ?? null,
+                'jenis' => $m->jenis,
+                'jumlah' => $m->jumlah,
+                'satuan' => $m->barang->satuan ?? null,
+                'penanggung_jawab' => $m->penanggung_jawab,
+                'tanggal' => date('d M Y', strtotime($m->tanggal)),
+                'keterangan' => $m->keterangan,
+            ];
+        });
+
+        return response()->json(['data' => $results]);
     }
 }
