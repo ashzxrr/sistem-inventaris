@@ -14,10 +14,14 @@ class MutasiController extends Controller
         return view('mutasi.index', compact('mutasis'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        // Get count from query parameter, default to 1
+        $count = $request->query('count', 1);
+        $count = max(1, min(10, intval($count))); // Validate between 1-10
+        
         $barangs = Barang::all();
-        return view('mutasi.create', compact('barangs'));
+        return view('mutasi.create', compact('barangs', 'count'));
     }
 
     public function store(Request $request)
@@ -41,6 +45,51 @@ class MutasiController extends Controller
         ]);
 
         return redirect('/mutasi')->with('success', 'Mutasi berhasil ditambahkan');
+    }
+
+    public function bulkStore(Request $request)
+    {
+        $count = intval($request->input('count', 1));
+        $count = max(1, min(10, $count)); // Validate between 1-10
+
+        // Validate all items
+        for ($i = 1; $i <= $count; $i++) {
+            $request->validate([
+                "mutasi.{$i}.barang_id" => 'required|exists:barangs,id',
+                "mutasi.{$i}.jenis" => 'required|in:MASUK,KELUAR',
+                "mutasi.{$i}.jumlah" => 'required|integer|min:1',
+                "mutasi.{$i}.penanggung_jawab" => 'required|string',
+                "mutasi.{$i}.tanggal" => 'required|date',
+                "mutasi.{$i}.keterangan" => 'nullable|string',
+            ]);
+        }
+
+        try {
+            $mutasis = $request->input('mutasi', []);
+            $successCount = 0;
+
+            for ($i = 1; $i <= $count; $i++) {
+                if (isset($mutasis[$i])) {
+                    $data = $mutasis[$i];
+                    
+                    Mutasi::create([
+                        'barang_id' => $data['barang_id'],
+                        'jenis' => $data['jenis'],
+                        'jumlah' => $data['jumlah'],
+                        'penanggung_jawab' => $data['penanggung_jawab'],
+                        'tanggal' => $data['tanggal'],
+                        'keterangan' => $data['keterangan'] ?? null
+                    ]);
+
+                    $successCount++;
+                }
+            }
+
+            $message = $successCount . ' mutasi berhasil ditambahkan';
+            return redirect('/mutasi')->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function edit($id)

@@ -19,6 +19,7 @@ Route::delete('/barang/{id}', [BarangController::class, 'destroy']);
 Route::get('/mutasi', [MutasiController::class, 'index']);
 Route::get('/mutasi/create', [MutasiController::class, 'create']);
 Route::post('/mutasi', [MutasiController::class, 'store']);
+Route::post('/mutasi/bulk-store', [MutasiController::class, 'bulkStore']);
 Route::get('/mutasi/{id}/edit', [MutasiController::class, 'edit']);
 Route::put('/mutasi/{id}', [MutasiController::class, 'update']);
 Route::delete('/mutasi/{id}', [MutasiController::class, 'destroy']);
