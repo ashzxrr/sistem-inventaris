@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Data Mutasi</title>
     <style>
         * {
@@ -784,7 +785,7 @@
         });
 
         // Live search (debounced) — replace table body with AJAX results and hide pagination
-        (function() {
+        document.addEventListener('DOMContentLoaded', function() {
             const input = document.getElementById('searchInput');
             const form = document.getElementById('searchForm');
             const tbody = document.getElementById('mutasiTbody');
@@ -907,7 +908,7 @@
                     timer = setTimeout(() => doSearch(q), 300);
                 });
             }
-        })();
+        });
     </script>
 </body>
 </html>
