@@ -5,12 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Mutasi;
 use App\Models\Barang;
 use Illuminate\Http\Request;
+use App\Exports\MutasiExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel as ExcelType;
 
 class MutasiController extends Controller
 {
     public function index(Request $request)
     {
         $q = $request->query('q');
+        // items per page configurable by user: allow 10,20,50 (default 10)
+        $allowedPer = [10, 20, 50];
+        $perPage = intval($request->query('perPage', 10));
+        if (!in_array($perPage, $allowedPer)) {
+            $perPage = 10;
+        }
 
         $query = Mutasi::with('barang')->orderBy('tanggal', 'desc');
 
@@ -26,9 +35,9 @@ class MutasiController extends Controller
             });
         }
 
-        // paginate results (10 per page)
-        $mutasis = $query->paginate(10);
-        return view('mutasi.index', compact('mutasis', 'q'));
+        // paginate results with chosen per-page and preserve query string
+        $mutasis = $query->paginate($perPage)->withQueryString();
+        return view('mutasi.index', compact('mutasis', 'q'))->with('perPage', $perPage);
     }
 
     public function create(Request $request)
@@ -176,5 +185,69 @@ class MutasiController extends Controller
         });
 
         return response()->json(['data' => $results]);
+    }
+
+    /**
+     * Export filtered mutasis as CSV (downloadable).
+     */
+    public function exportCsv(Request $request)
+    {
+        $q = $request->query('q');
+
+        $query = Mutasi::with('barang')->orderBy('tanggal', 'desc');
+        if ($q) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('penanggung_jawab', 'like', "%{$q}%")
+                    ->orWhere('keterangan', 'like', "%{$q}%")
+                    ->orWhere('jenis', 'like', "%{$q}%")
+                    ->orWhereHas('barang', function($qb) use ($q) {
+                        $qb->where('kode_barang', 'like', "%{$q}%")
+                           ->orWhere('nama_barang', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        $mutasis = $query->get();
+
+        $filename = 'mutasi_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function() use ($mutasis) {
+            $out = fopen('php://output', 'w');
+            // BOM for Excel to handle UTF-8
+            fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($out, ['No', 'Kode Barang', 'Nama Barang', 'Jenis', 'Jumlah', 'Satuan', 'Penanggung Jawab', 'Tanggal', 'Keterangan']);
+            foreach ($mutasis as $i => $m) {
+                fputcsv($out, [
+                    $i + 1,
+                    $m->barang->kode_barang ?? '',
+                    $m->barang->nama_barang ?? '',
+                    $m->jenis,
+                    $m->jumlah,
+                    $m->barang->satuan ?? '',
+                    $m->penanggung_jawab,
+                    date('Y-m-d', strtotime($m->tanggal)),
+                    $m->keterangan,
+                ]);
+            }
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export as Excel-compatible file (CSV served as .xls).
+     * This is a lightweight approach: many spreadsheet apps open CSV renamed to .xls.
+     */
+    public function exportXls(Request $request)
+    {
+        // Use maatwebsite/excel MutasiExport to generate .xlsx file
+        $q = $request->query('q');
+        $fileName = 'mutasi_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new MutasiExport($q), $fileName, ExcelType::XLSX);
     }
 }

@@ -564,7 +564,27 @@
                 </form>
             </div>
 
-            <button class="btn" onclick="openModal()">+ Tambah Mutasi</button>
+            <div style="display:flex; gap:0.6rem; align-items:center;">
+                @php
+                    $exportParams = array_filter(['q' => $q ?? null, 'perPage' => $perPage ?? null]);
+                    $exportQuery = count($exportParams) ? ('?' . http_build_query($exportParams)) : '';
+                @endphp
+
+                <a id="exportCsvBtn" href="/mutasi/export/csv{{ $exportQuery }}" class="btn" style="background:#6a9bc8;">Export CSV</a>
+                <a id="exportXlsBtn" href="/mutasi/export/xls{{ $exportQuery }}" class="btn" style="background:#6a9bc8;">Export Excel</a>
+
+                <form id="perPageForm" method="GET" action="/mutasi" style="margin:0; display:flex; align-items:center; gap:0.5rem;">
+                    <input type="hidden" name="q" value="{{ $q ?? '' }}">
+                    <label for="perPageSelect" style="color:#5a4844; font-weight:600;">Per halaman</label>
+                    <select id="perPageSelect" name="perPage" onchange="this.form.submit()" style="padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #e8b5ae;">
+                        <option value="10" {{ ( ($perPage ?? 10) == 10 ) ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ ( ($perPage ?? 10) == 20 ) ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ ( ($perPage ?? 10) == 50 ) ? 'selected' : '' }}>50</option>
+                    </select>
+                </form>
+
+                <button class="btn" onclick="openModal()">+ Tambah Mutasi</button>
+            </div>
         </div>
 
         @if($mutasis->total() > 0)
@@ -625,7 +645,14 @@
                                     <a href="{{ $mutasis->previousPageUrl() }}">« Prev</a>
                                 @endif
 
-                                @for($i = 1; $i <= $mutasis->lastPage(); $i++)
+                                @php
+                                    $current = $mutasis->currentPage();
+                                    $last = $mutasis->lastPage();
+                                    $start = (int)(floor(($current - 1) / 10) * 10) + 1;
+                                    $end = min($start + 9, $last);
+                                @endphp
+
+                                @for($i = $start; $i <= $end; $i++)
                                     @if($i == $mutasis->currentPage())
                                         <span class="active">{{ $i }}</span>
                                     @else
@@ -814,6 +841,18 @@
 
                 input.addEventListener('input', function(e) {
                     const q = e.target.value.trim();
+                    // update export links to include current query and perPage
+                    const csvBtn = document.getElementById('exportCsvBtn');
+                    const xlsBtn = document.getElementById('exportXlsBtn');
+                    const perSel = document.getElementById('perPageSelect');
+                    const perVal = perSel ? perSel.value : '';
+                    const params = new URLSearchParams();
+                    if (q) params.append('q', q);
+                    if (perVal) params.append('perPage', perVal);
+                    const qs = params.toString() ? '?' + params.toString() : '';
+                    if (csvBtn) csvBtn.href = `/mutasi/export/csv${qs}`;
+                    if (xlsBtn) xlsBtn.href = `/mutasi/export/xls${qs}`;
+
                     clearTimeout(timer);
                     if (!q) {
                         // restore initial paginated view immediately
