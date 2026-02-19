@@ -18,6 +18,8 @@ Route::put('/barang/{id}', [BarangController::class, 'update']);
 Route::delete('/barang/{id}', [BarangController::class, 'destroy']);
 Route::get('/mutasi', [MutasiController::class, 'index']);
 Route::get('/mutasi/search', [MutasiController::class, 'search']);
+Route::get('/mutasi/export/csv', [MutasiController::class, 'exportCsv']);
+Route::get('/mutasi/export/xls', [MutasiController::class, 'exportXls']);
 Route::get('/mutasi/create', [MutasiController::class, 'create']);
 Route::post('/mutasi', [MutasiController::class, 'store']);
 Route::post('/mutasi/bulk-store', [MutasiController::class, 'bulkStore']);
