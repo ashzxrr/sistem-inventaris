@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Mutasi</title>
     <style>
@@ -113,6 +112,27 @@
             box-shadow: 0 8px 20px rgba(212, 132, 127, 0.3);
         }
 
+        /* Icon button variants */
+        .btn-export, .btn-edit, .btn-delete {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .btn-export svg, .btn-edit svg, .btn-delete svg, .badge svg { vertical-align: middle; }
+
+        .btn-edit { background: linear-gradient(135deg, #81b4d8 0%, #6a9bc8 100%); color: #fff; border: none; }
+        .btn-delete { background: linear-gradient(135deg, #e8837e 0%, #d96f63 100%); color: #fff; border: none; }
+        .btn-export { background: linear-gradient(135deg, #6a9bc8 0%, #5a8ac0 100%); color: #fff; border: none; }
+
+        .btn-edit:hover, .btn-delete:hover, .btn-export:hover { transform: scale(1.03); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+
+        /* Smaller action area in table */
+        .actions a, .actions button { border-radius: 6px; }
+
         /* Table */
         .table-wrapper {
             background: white;
@@ -164,6 +184,8 @@
             background: linear-gradient(135deg, #e8837e 0%, #d96f63 100%);
             color: white;
         }
+
+        .badge svg { width:14px; height:14px; margin-right:6px; }
 
         .search-form {
             display: flex;
@@ -570,8 +592,14 @@
                     $exportQuery = count($exportParams) ? ('?' . http_build_query($exportParams)) : '';
                 @endphp
 
-                <a id="exportCsvBtn" href="/mutasi/export/csv{{ $exportQuery }}" class="btn" style="background:#6a9bc8;">Export CSV</a>
-                <a id="exportXlsBtn" href="/mutasi/export/xls{{ $exportQuery }}" class="btn" style="background:#6a9bc8;">Export Excel</a>
+                <a id="exportCsvBtn" href="/mutasi/export/csv{{ $exportQuery }}" class="btn btn-export" style="background:#6a9bc8;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    CSV
+                </a>
+                <a id="exportXlsBtn" href="/mutasi/export/xls{{ $exportQuery }}" class="btn btn-export" style="background:#6a9bc8;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><rect x="7" y="3" width="10" height="11" rx="2" ry="2"/></svg>
+                    Excel
+                </a>
 
                 <form id="perPageForm" method="GET" action="/mutasi" style="margin:0; display:flex; align-items:center; gap:0.5rem;">
                     <input type="hidden" name="q" value="{{ $q ?? '' }}">
@@ -611,9 +639,15 @@
                             <td>{{ $mutasi->barang->nama_barang }}</td>
                             <td>
                                 @if($mutasi->jenis == 'MASUK')
-                                    <span class="badge badge-masuk">✓ MASUK</span>
+                                    <span class="badge badge-masuk">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        MASUK
+                                    </span>
                                 @else
-                                    <span class="badge badge-keluar">✗ KELUAR</span>
+                                    <span class="badge badge-keluar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                        KELUAR
+                                    </span>
                                 @endif
                             </td>
                             <td><strong style="color: #d4847f;">{{ $mutasi->jumlah }} {{ $mutasi->barang->satuan }}</strong></td>
@@ -622,11 +656,14 @@
                             <td><span class="text-muted">{{ Str::limit($mutasi->keterangan, 30) }}</span></td>
                             <td>
                                 <div class="actions">
-                                    <a href="/mutasi/{{ $mutasi->id }}/edit" class="btn-edit">Edit</a>
+                                    <a href="/mutasi/{{ $mutasi->id }}/edit" class="btn btn-edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                        Edit
+                                    </a>
                                     <form action="/mutasi/{{ $mutasi->id }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus mutasi ini?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn-delete">Hapus</button>
+                                        <button type="submit" class="btn btn-delete"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg>Hapus</button>
                                     </form>
                                 </div>
                             </td>
@@ -779,8 +816,8 @@
                 let html = '';
                 items.forEach((m, idx) => {
                     const badge = m.jenis === 'MASUK' ?
-                        '<span class="badge badge-masuk">✓ MASUK</span>' :
-                        '<span class="badge badge-keluar">✗ KELUAR</span>';
+                        '<span class="badge badge-masuk"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> MASUK</span>' :
+                        '<span class="badge badge-keluar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> KELUAR</span>';
 
                     html += `
                         <tr>
@@ -794,11 +831,14 @@
                             <td><span class="text-muted">${truncate(m.keterangan)}</span></td>
                             <td>
                                 <div class="actions">
-                                    <a href="/mutasi/${m.id}/edit" class="btn-edit">Edit</a>
+                                    <a href="/mutasi/${m.id}/edit" class="btn btn-edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                        Edit
+                                    </a>
                                     <form action="/mutasi/${m.id}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus mutasi ini?');">
                                         <input type="hidden" name="_token" value="${document.querySelector('meta[name=csrf-token]').getAttribute('content')}">
                                         <input type="hidden" name="_method" value="DELETE">
-                                        <button type="submit" class="btn-delete">Hapus</button>
+                                        <button type="submit" class="btn btn-delete"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg>Hapus</button>
                                     </form>
                                 </div>
                             </td>
